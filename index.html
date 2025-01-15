@@ -31,6 +31,7 @@
             text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
             font-size: 36px;
             font-weight: bold;
+            transition: background 0.3s ease;
         }
 
         .tabs {
@@ -72,23 +73,24 @@
             background-color: #fff;
             margin-bottom: 20px;
             break-inside: avoid;
+            cursor: pointer;
         }
 
         .media-card img, .media-card video {
             width: 100%;
             object-fit: cover;
-            cursor: pointer;
             border-radius: 15px;
         }
 
         .media-card video {
-            display: block;
+            display: none;
             opacity: 0;
             pointer-events: none;
-            transition: opacity 0.3s;
+            transition: opacity 0.3s ease;
         }
 
         .media-card:hover video {
+            display: block;
             opacity: 1;
             pointer-events: auto;
         }
@@ -110,10 +112,14 @@
             cursor: pointer;
             font-size: 14px;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
         }
 
-        .download-button:hover {
-            background-color: #16a085;
+        .media-card:hover .download-button {
+            opacity: 1;
+            pointer-events: auto;
         }
 
         footer {
@@ -132,6 +138,20 @@
 
         footer a:hover {
             text-decoration: underline;
+        }
+
+        .search-bar {
+            display: flex;
+            justify-content: center;
+            margin: 20px;
+        }
+
+        .search-bar input {
+            width: 300px;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
         }
 
         @media (max-width: 768px) {
@@ -157,7 +177,9 @@
       ZenTrades Service-Related Media
     </div>
 
-   
+    <div class="search-bar">
+        <input type="text" id="search-input" placeholder="Search for images or videos..." oninput="searchMedia()">
+    </div>
 
     <div class="tabs">
         <div id="image-tab" class="tab active" onclick="showMedia('image')">Images</div>
@@ -174,7 +196,6 @@
 
     <script>
         const apiKey = 'AgcRGr1uEqcVH5OILmH65JHp5hE59kjZNDl3ZMrnCoHwW6494b2AOQN8';
-
         let currentMediaType = 'image';
 
         // Fetch and display media
@@ -193,6 +214,7 @@
                 mediaItems.forEach(item => {
                     const card = document.createElement('div');
                     card.classList.add('media-card');
+                    card.onclick = () => changeHeroSection(item, mediaType);
 
                     if (mediaType === 'image') {
                         const img = document.createElement('img');
@@ -212,7 +234,8 @@
                     const downloadButton = document.createElement('button');
                     downloadButton.classList.add('download-button');
                     downloadButton.textContent = 'Download';
-                    downloadButton.onclick = () => {
+                    downloadButton.onclick = (e) => {
+                        e.stopPropagation(); // Prevent triggering the card click
                         const link = document.createElement('a');
                         link.href = mediaType === 'image' ? item.src.original : item.video_files[0].link;
                         link.download = '';
@@ -236,6 +259,29 @@
             document.getElementById('video-tab').classList.remove('active');
             document.getElementById(`${mediaType}-tab`).classList.add('active');
             fetchMedia('fire hvac electrical plumbing', mediaType);
+        }
+
+        // Change the background of the hero section when an image or video is clicked
+        function changeHeroSection(item, mediaType) {
+            const heroSection = document.querySelector('.hero-section');
+            if (mediaType === 'image') {
+                heroSection.style.backgroundImage = `url(${item.src.original})`;
+            } else {
+                const videoElement = document.createElement('video');
+                videoElement.src = item.video_files[0].link;
+                videoElement.muted = true;
+                videoElement.autoplay = true;
+                videoElement.loop = true;
+                videoElement.controls = true;
+                heroSection.innerHTML = ''; // Clear current content
+                heroSection.appendChild(videoElement);
+            }
+        }
+
+        // Search media based on input
+        function searchMedia() {
+            const query = document.getElementById('search-input').value;
+            fetchMedia(query, currentMediaType);
         }
 
         // Load default media on page load
